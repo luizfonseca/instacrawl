@@ -1,0 +1,1 @@
+<script type="text/javascript">window._timings = {"domLoading": Date.now()}</script>
