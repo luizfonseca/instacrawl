@@ -6,7 +6,10 @@ class Location < ActiveRecord::Base
 			name: self.name,
 			hashtag: self.hashtag,
 			latitude: self.lat,
-			longitude: self.lng
+			longitude: self.lng,
+			instagram_id: self.instagram_id,
+			address: self.address,
+			media: self.medias
 		}.merge(options)
 		
 	end

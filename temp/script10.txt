@@ -1,1 +1,0 @@
-<script type="text/javascript">window._timings.domInteractive = Date.now()</script>

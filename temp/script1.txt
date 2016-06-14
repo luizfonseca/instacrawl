@@ -1,7 +1,0 @@
-<script type="text/javascript">
-  WebFontConfig = {
-    custom: {
-      families: ['proxima-nova:n3,n4,n6,n7'],
-    }
-  };
-</script>
