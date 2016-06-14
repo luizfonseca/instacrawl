@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160614041750) do
+ActiveRecord::Schema.define(version: 20160614072940) do
 
   create_table "locations", force: :cascade do |t|
     t.string  "name",         default: "", null: false
@@ -29,7 +29,7 @@ ActiveRecord::Schema.define(version: 20160614041750) do
     t.integer  "dimension_h",        default: 1350,  null: false
     t.integer  "likes_count",        default: 0,     null: false
     t.integer  "comments_count",     default: 0,     null: false
-    t.integer  "owner_id",           default: 1,     null: false
+    t.string   "owner_id",           default: "0",   null: false
     t.boolean  "is_video",           default: false, null: false
     t.string   "instagram_id",       default: "0",   null: false
     t.string   "remote_thumb_src",   default: "",    null: false
