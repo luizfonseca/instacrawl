@@ -108,9 +108,9 @@ def save_media(data)
 	end
 
 	m = Media.new
-	m.caption 			= data['caption']
-	m.shortcode 		= data['code']
-	m.date 				= data['date']
+	m.caption			= data['caption']
+	m.shortcode			= data['code']
+	m.date				= data['date']
 	m.dimension_w 		= data['dimensions']['width']
 	m.dimension_h 		= data['dimensions']['height']
 	m.comments_count 	= data['comments']['count']
