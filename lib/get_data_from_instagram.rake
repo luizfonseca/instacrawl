@@ -54,7 +54,7 @@ end
 
 def get_script_data(page) 
 	puts "#{Time.now}  - Page #{page} getting scrapped... "
-	
+
 	# Begin crawling	
 	page_src 	= "./temp/#{page}.html"
 	script_src 	= "temp/script-#{page}.txt"
@@ -74,7 +74,7 @@ end
 
 
 def parse_and_save_media(script_src)
-	
+
 	file = File.read(script_src)
 
 	file = file.sub(/<script type="text\/javascript">window\._sharedData =/, '')
@@ -83,8 +83,8 @@ def parse_and_save_media(script_src)
 	open(script_src, 'w') do |f|
 		f << file
 	end
-		
-	
+
+
 	json = JSON.load(File.read(script_src))
 	entry = json['entry_data']
 	save_tag_media(entry['TagPage'].first) if entry['TagPage']	
