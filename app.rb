@@ -27,12 +27,14 @@ get '/api/locations' do
 end
 
 get '/api/media' do
+  content_type :json
 	@medias = Media.all
 	json @medias
 end
 
 
 get '/api/media/search' do
+  content_type :json
   @medias = nil
   lat = params[:lat]
   lng = params[:lng]
