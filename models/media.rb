@@ -26,11 +26,13 @@ class Media < ActiveRecord::Base
       images: {
         low_resolution: {},
         thumbnail: {
+          local: self.local_thumb_src,
           url: self.remote_thumb_src,
           width: self.dimension_w,
           height: self.dimension_h
         },
         standard_resolution: {
+          local: self.local_display_src,
           url: self.remote_display_src,
           width: self.dimension_w,
           height: self.dimension_h
