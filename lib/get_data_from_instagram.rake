@@ -117,28 +117,33 @@ end
 
 def query_tag_instagram(start_cursor)
 
-  page = JSON.parse(open(query_hashtag_url(@active_hashtag, start_cursor), 'User-Agent' => USER_AGENT).read)
-  page_info = page['media']['page_info'] 
-  
-  has_next_page = page_info['has_next_page']
-  next_cursor   = page_info['end_cursor']
+  url = query_hashtag_url(@active_hashtag, start_cursor)
+  open(url, 'User-Agent' => USER_AGENT) do |stream|
+    
+    unless stream.status.first == '200'
+      puts "#{Time.now} - Hashtag #{@active_hashtag} request failed with status #{stream.status.first}."
+    end
+
+    page = JSON.parse(stream.read)
+    page_info = page['media']['page_info'] 
+    
+    has_next_page = page_info['has_next_page']
+    next_cursor   = page_info['end_cursor']
 
 
-  page['media']['nodes'].each do |node|
-    if @active_counter > 50 
-      @active_counter = 0
-      has_next_page = false
-      break
+    page['media']['nodes'].each do |node|
+      if @active_counter > 50 
+        @active_counter = 0
+        has_next_page = false
+        break
+      end
+      save_media(node)
     end
 
 
-    save_media(node)
+    return query_tag_instagram(next_cursor) if has_next_page
   end
 
-
-
-
-  return query_tag_instagram(next_cursor) if has_next_page
 
 end
 
