@@ -163,6 +163,10 @@ def save_media(data)
   m.owner_id 			  = data['owner']['id'].to_s
   m.remote_thumb_src	  = data['thumbnail_src'].to_s
   m.remote_display_src  = data['display_src'].to_s
+
+  m.local_thumb_src	    = get_image("thumb_#{data['code'].to_s}", data['thumbnail_src'].to_s)
+  m.local_display_src   = get_image("display_#{data['code'].to_s}", data['display_src'].to_s)
+  
   m.instagram_id		    = data['id'].to_s
   m.is_video			      = data['is_video']
   m.location 			      = @active_location_obj
@@ -171,7 +175,14 @@ def save_media(data)
 end
 
 
+def get_image(name, image_url)
+  src = "public/media/#{name}.jpg"
+  open(src, 'wb') do |file|
+    file << open(image_url).read
+  end
 
+  return src
+end
 
 
 def hashtag_url(hashtag)
