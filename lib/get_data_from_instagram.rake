@@ -1,10 +1,18 @@
 require 'nokogiri'
 require 'open-uri'
+require 'uri'
 require 'json'
 
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"
-@locations = Location.all
-@active_location = nil
+# OPEN URI configs
+USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"
+@locations        = Location.all
+
+# Instagram
+@active_hashtag   = nil
+@active_counter   = 0
+
+# Ruby wide-available object
+@active_location_obj  = nil
 
 
 task :get_by_hashtag do
@@ -12,28 +20,20 @@ task :get_by_hashtag do
   @locations.each do |location|
     list = location.hashtag.split(',')
     list.each do |hashtag|
-      @active_location = location
+
+
+      @active_hashtag = hashtag
+      @active_location_obj = location
       find_and_save_media({ hashtag: hashtag })
-      sleep 2
+      sleep 2 # So we dont fetch it every nanosecond
     end
   end
 
 end
 
 
-task :get_by_location do
 
-  @locations.each do |location|
-    list = location.hashtag.split(',').strip!
-    puts list
-    # list.each do |hashtag|
-    #find_and_save_media(location, hashtag)
-    # end
-  end
-
-end
-
-
+# Just decoupling
 def find_and_save_media(options = {})
   if options[:hashtag]
     hashtag = options[:hashtag].strip
@@ -41,6 +41,9 @@ def find_and_save_media(options = {})
   end
 end
 
+
+# SImple request page from instagram and save it
+# using Nokogiri lib
 def request_from_instagram(url, page_name)
   name = page_name == '' ? 'page' : page_name
   page = Nokogiri::HTML(open(url, 'User-Agent' => USER_AGENT), nil, "UTF-8")
@@ -53,6 +56,9 @@ def request_from_instagram(url, page_name)
 end
 
 
+
+# We fetch the HTML for the <script> tag
+# containing the shared data object
 def get_script_data(page) 
   puts "#{Time.now}  - Page #{page} getting scrapped... "
 
@@ -70,11 +76,15 @@ def get_script_data(page)
     end
   end
   puts "#{Time.now} - Page #{page_src} > script saved."
-  parse_and_save_media(script_src)
+  parse_script(script_src)
 end
 
 
-def parse_and_save_media(script_src)
+
+
+# Parse the script for the sharedData object and save it
+# as JSON
+def parse_script(script_src)
 
   file = File.read(script_src)
 
@@ -87,24 +97,58 @@ def parse_and_save_media(script_src)
 
 
   json = JSON.load(File.read(script_src))
+
+
   entry = json['entry_data']
-  save_tag_media(entry['TagPage'].first) if entry['TagPage']	
+  scrap_tag_media(entry['TagPage'].first) if entry['TagPage']	
   #save_location_media(location, entry['LocationsPage']) if entry['LocationsPage']	
 end
 
 
 
-def save_tag_media(entry)
-  entry['tag']['media']['nodes'].each do |media|
-    save_media(media)
-  end
+def scrap_tag_media(entry)
+  data          = entry['tag']['media']
+  start_cursor  = data['page_info']['start_cursor']
+
+  query_tag_instagram(start_cursor)
 end
+
+
+def query_tag_instagram(start_cursor)
+
+  page = JSON.parse(open(query_hashtag_url(@active_hashtag, start_cursor), 'User-Agent' => USER_AGENT).read)
+  page_info = page['media']['page_info'] 
+  
+  has_next_page = page_info['has_next_page']
+  next_cursor   = page_info['end_cursor']
+
+
+  page['media']['nodes'].each do |node|
+    if @active_counter > 200
+      @active_counter = 0
+      has_next_page = false
+      break
+    end
+
+
+    save_media(node)
+  end
+
+
+
+
+  return query_tag_instagram(next_cursor) if has_next_page
+
+end
+
+
 
 def save_media(data)
   media = Media.find_by shortcode: data['code']
 
   unless media.nil?
     puts "#{data['code']} -  Media already saved"
+    @active_counter += 1
     return
   end
 
@@ -121,10 +165,14 @@ def save_media(data)
   m.remote_display_src  = data['display_src'].to_s
   m.instagram_id		    = data['id'].to_s
   m.is_video			      = data['is_video']
-  m.location 			      = @active_location
+  m.location 			      = @active_location_obj
   m.save!
   puts "Saved media #{m.shortcode}"
 end
+
+
+
+
 
 def hashtag_url(hashtag)
   return "https://www.instagram.com/explore/tags/#{hashtag}"
@@ -133,5 +181,44 @@ end
 
 def location_url(location_id)
   return "https://www.instagram.com/explore/locations/#{location_id}"
+end
+
+
+
+def query_hashtag_url(hashtag, after_cursor)
+  hashencode = %Q{
+  ig_hashtag(#{hashtag}) { media.after(#{after_cursor}, 12) {
+  count,
+  nodes {
+    caption,
+    code,
+    comments {
+      count
+    },
+    date,
+    dimensions {
+      height,
+      width
+    },
+    display_src,
+    id,
+    is_video,
+    likes {
+      count
+    },
+    owner {
+      id
+    },
+    thumbnail_src,
+    video_views
+  },
+  page_info
+}
+ }
+
+  }
+
+
+  return "https://www.instagram.com/query/?q=#{URI.encode(hashencode)}"
 end
 
