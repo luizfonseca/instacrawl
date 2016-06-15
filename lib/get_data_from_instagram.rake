@@ -42,7 +42,7 @@ def find_and_save_media(options = {})
 end
 
 
-# SImple request page from instagram and save it
+# Simple request page from instagram and save it
 # using Nokogiri lib
 def request_from_instagram(url, page_name)
   name = page_name == '' ? 'page' : page_name
@@ -98,7 +98,7 @@ def parse_script(script_src)
   json = JSON.load(File.read(script_src))
   entry = json['entry_data']
 
-  scrap_tag_media(entry['TagPage'].first) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['count'] != 0	
+  scrap_tag_media(entry['TagPage'].first) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['nodes'].size != 0	
   #save_location_media(location, entry['LocationsPage']) if entry['LocationsPage']	
 end
 
@@ -122,7 +122,7 @@ def query_tag_instagram(start_cursor)
 
 
   page['media']['nodes'].each do |node|
-    if @active_counter > 5 
+    if @active_counter > 50 
       @active_counter = 0
       has_next_page = false
       break
