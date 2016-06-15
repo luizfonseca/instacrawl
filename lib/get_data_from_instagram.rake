@@ -20,7 +20,7 @@ task :get_by_hashtag do
   @locations.each do |location|
     list = location.hashtag.split(',')
     list.each do |hashtag|
-
+      next if ['N/A', ''].include?(hashtag.to_s)
 
       @active_hashtag       = hashtag
       @active_location_obj  = location
@@ -45,6 +45,9 @@ end
 # Simple request page from instagram and save it
 # using Nokogiri lib
 def request_from_instagram(url, page_name)
+
+  puts "#{Time.now}  - Fetching [#{url}]"
+
   name = page_name == '' ? 'page' : page_name
   page = Nokogiri::HTML(open(url, 'User-Agent' => USER_AGENT), nil, "UTF-8")
   open("temp/#{name}.html", 'w') do |file|
