@@ -22,9 +22,9 @@ task :get_by_hashtag do
     list.each do |hashtag|
 
 
-      @active_hashtag = hashtag
-      @active_location_obj = location
-      find_and_save_media({ hashtag: hashtag })
+      @active_hashtag       = hashtag
+      @active_location_obj  = location
+      find_and_save_media({ hashtag: @active_hashtag })
       sleep 2 # So we dont fetch it every nanosecond
     end
   end
@@ -95,12 +95,10 @@ def parse_script(script_src)
     f << file
   end
 
-
   json = JSON.load(File.read(script_src))
-
-
   entry = json['entry_data']
-  scrap_tag_media(entry['TagPage'].first) if entry['TagPage']	
+
+  scrap_tag_media(entry['TagPage'].first) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['count'] != 0	
   #save_location_media(location, entry['LocationsPage']) if entry['LocationsPage']	
 end
 
@@ -124,7 +122,7 @@ def query_tag_instagram(start_cursor)
 
 
   page['media']['nodes'].each do |node|
-    if @active_counter > 200
+    if @active_counter > 5 
       @active_counter = 0
       has_next_page = false
       break
@@ -181,7 +179,7 @@ def get_image(name, image_url)
     file << open(image_url).read
   end
 
-  return src
+  return "media/#{name}.jpg"
 end
 
 
