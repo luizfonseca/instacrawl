@@ -29,7 +29,7 @@ end
 get '/api/media' do
   content_type :json
 	@medias = Media.all
-	json @medias
+  JSON.pretty_generate(@medias.as_json)
 end
 
 
@@ -38,7 +38,17 @@ get '/api/media/search' do
   @medias = nil
   lat = params[:lat]
   lng = params[:lng]
-  if lat && lng 
+  options = {
+    from: params[:from],
+    to: params[:to],
+    date: params[:date]
+  }
+
+  return unless lat && lng 
+
+  if params[:from] || params[:to] || params[:date]
+    @medias = Media.find_by_coord_and_time(lat, lng, options)
+  else
     @medias = Media.find_by_coord(lat,lng) 
   end
 
