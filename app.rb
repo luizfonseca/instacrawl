@@ -28,7 +28,7 @@ end
 
 get '/api/media' do
   content_type :json
-	@medias = Media.all
+  @medias = Media.all.limit(200)
   JSON.pretty_generate(@medias.as_json)
 end
 

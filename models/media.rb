@@ -27,7 +27,7 @@ class Media < ActiveRecord::Base
       },
       link: "https://instagram.com/p/#{self.shortcode}",
       created_time: self.date,
-      created_time_stamp: Time.at(self.date),
+      created_time_stamp: Time.at(self.date).strftime('%Y-%m-%d %H:%M:%S'),
       images: {
         low_resolution: {},
         thumbnail: {
@@ -54,7 +54,7 @@ class Media < ActiveRecord::Base
   def self.find_by_coord(lat, lng)
     self.find_by_sql ["SELECT * FROM medias as md 
     JOIN locations as lc ON lc.id = md.location_id 
-    WHERE lc.lat = ? AND lc.lng = ?", lat, lng]
+    WHERE lc.lat = ? AND lc.lng = ? ORDER BY datetime(date, 'unixepoch', 'localtime') DESC LIMIT 1000", lat, lng]
   end
 
 
@@ -71,7 +71,7 @@ class Media < ActiveRecord::Base
     JOIN locations as lc ON lc.id = md.location_id 
     WHERE lc.lat = ? AND lc.lng = ? 
     AND datetime(date, 'unixepoch', 'localtime') > ? 
-    AND  datetime(date, 'unixepoch', 'localtime') < ?", lat, lng, from_date, to_date]
+    AND  datetime(date, 'unixepoch', 'localtime') < ? ORDER BY datetime(date, 'unixepoch', 'localtime') DESC LIMIT 1000", lat, lng, from_date, to_date]
   end
 end
 
