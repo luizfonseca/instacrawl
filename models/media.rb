@@ -10,6 +10,7 @@ class Media < ActiveRecord::Base
 
 	def as_json(options={})
     return {
+      code: self.shortcode,
       distance: 0.0,
       type: self.type,
       users_in_photo: [],
