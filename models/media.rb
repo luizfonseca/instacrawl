@@ -29,8 +29,13 @@ class Media < ActiveRecord::Base
       created_time: self.date,
       created_time_stamp: Time.at(self.date).strftime('%Y-%m-%d %H:%M:%S'),
       images: {
-        low_resolution: {},
-        thumbnail: {
+        low_resolution: {
+          local: self.local_thumb_src,
+          url: self.remote_thumb_src,
+          width: self.dimension_w,
+          height: self.dimension_h       
+        },
+        thumbnail_resolution: {
           local: self.local_thumb_src,
           url: self.remote_thumb_src,
           width: self.dimension_w,
@@ -42,7 +47,9 @@ class Media < ActiveRecord::Base
           width: self.dimension_w,
           height: self.dimension_h
         }
-      }
+      },
+      id: self.instagram_id,
+      location: nil
     }.merge(options)
 		
 	end
