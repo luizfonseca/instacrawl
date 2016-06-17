@@ -15,7 +15,7 @@ class Media < ActiveRecord::Base
       type: self.type,
       users_in_photo: [],
       filter: "",
-      tags: self.location.hashtag,
+      tags: self.hashtags,
       comments: {
         count: self.comments_count
       },
@@ -80,6 +80,11 @@ class Media < ActiveRecord::Base
     WHERE lc.lat = ? AND lc.lng = ? 
     AND to_timestamp(date) > ? 
     AND  to_timestamp(date) < ? ORDER BY to_timestamp(date) DESC LIMIT 1000", lat, lng, from_date, to_date]
+  end
+
+
+  def hashtags
+    self.caption.scan(/#\w+/).join ' '
   end
 end
 

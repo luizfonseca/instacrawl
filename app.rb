@@ -22,13 +22,13 @@ get '/api/locations' do
   content_type :json
   
 	@locations = Location.all
-  JSON.pretty_generate(@locations.as_json)
+  json(@locations.as_json)
 end
 
 get '/api/media' do
   content_type :json
-  @medias = Media.all.limit(200)
-  JSON.pretty_generate(@medias.as_json)
+  @medias = Media.joins(:location).all.limit(200)
+  json(@medias.as_json)
 end
 
 
@@ -46,12 +46,12 @@ get '/api/media/search' do
   return unless lat && lng 
 
   if params[:from] || params[:to] || params[:date]
-    @medias = Media.find_by_coord_and_time(lat, lng, options)
+    @medias = Media.join(:location).find_by_coord_and_time(lat, lng, options)
   else
-    @medias = Media.find_by_coord(lat,lng) 
+    @medias = Media.join(:location).find_by_coord(lat,lng) 
   end
 
-  JSON.pretty_generate(@medias.as_json)
+  json(@medias.as_json)
 end
 
 
