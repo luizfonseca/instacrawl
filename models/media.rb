@@ -78,8 +78,8 @@ class Media < ActiveRecord::Base
     self.find_by_sql ["SELECT * FROM medias as md 
     JOIN locations as lc ON lc.id = md.location_id 
     WHERE lc.lat = ? AND lc.lng = ? 
-    AND to_timestamp(date)::date > ? 
-    AND  to_timestamp(date)::date < ? ORDER BY to_timestamp(date)::date DESC LIMIT 1000", lat, lng, from_date, to_date]
+    AND to_timestamp(date) > ? 
+    AND  to_timestamp(date) < ? ORDER BY to_timestamp(date) DESC LIMIT 1000", lat, lng, from_date, to_date]
   end
 end
 
