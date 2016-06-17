@@ -62,7 +62,7 @@ class Media < ActiveRecord::Base
   def self.find_by_coord(lat, lng)
     self.find_by_sql ["SELECT * FROM medias as md 
     JOIN locations as lc ON lc.id = md.location_id 
-    WHERE lc.lat = ? AND lc.lng = ? ORDER BY to_timestamp(date) DESC LIMIT 1000", lat, lng]
+    WHERE lc.lat = ? AND lc.lng = ? ORDER BY to_timestamp(date) DESC LIMIT 500", lat, lng]
   end
 
 
@@ -79,7 +79,7 @@ class Media < ActiveRecord::Base
     JOIN locations as lc ON lc.id = md.location_id 
     WHERE lc.lat = ? AND lc.lng = ? 
     AND to_timestamp(date) > ? 
-    AND  to_timestamp(date) < ? ORDER BY to_timestamp(date) DESC LIMIT 1000", lat, lng, from_date, to_date]
+    AND  to_timestamp(date) < ? ORDER BY to_timestamp(date) DESC LIMIT 500", lat, lng, from_date, to_date]
   end
 
 
