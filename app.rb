@@ -27,7 +27,7 @@ end
 
 get '/api/media' do
   content_type :json
-  @medias = Media.joins(:location).all.limit(200)
+  @medias = Media.all.limit(200)
   json(@medias.as_json)
 end
 
@@ -46,9 +46,9 @@ get '/api/media/search' do
   return unless lat && lng 
 
   if params[:from] || params[:to] || params[:date]
-    @medias = Media.join(:location).find_by_coord_and_time(lat, lng, options)
+    @medias = Media.find_by_coord_and_time(lat, lng, options)
   else
-    @medias = Media.join(:location).find_by_coord(lat,lng) 
+    @medias = Media.find_by_coord(lat,lng) 
   end
 
   json(@medias.as_json)
