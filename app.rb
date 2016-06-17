@@ -5,7 +5,6 @@ require 'sinatra/activerecord'
 require 'sinatra/json'
 require 'json'
 
-set :database, { adapter: "sqlite3", database: "database.sqlite3" }
 
 Dir.glob('./models/*.rb').each { |r| require r } 
 

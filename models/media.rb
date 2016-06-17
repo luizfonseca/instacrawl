@@ -6,7 +6,7 @@ class Media < ActiveRecord::Base
 	belongs_to :location
 	validates_presence_of :location
 
-  default_scope { order("datetime(date, 'unixepoch', 'localtime') DESC") }
+  default_scope { order("to_timestamp(date)::date") }
 
 	def as_json(options={})
     return {
@@ -61,7 +61,7 @@ class Media < ActiveRecord::Base
   def self.find_by_coord(lat, lng)
     self.find_by_sql ["SELECT * FROM medias as md 
     JOIN locations as lc ON lc.id = md.location_id 
-    WHERE lc.lat = ? AND lc.lng = ? ORDER BY datetime(date, 'unixepoch', 'localtime') DESC LIMIT 1000", lat, lng]
+    WHERE lc.lat = ? AND lc.lng = ? ORDER BY to_timestamp(date)::date DESC LIMIT 1000", lat, lng]
   end
 
 
@@ -77,8 +77,8 @@ class Media < ActiveRecord::Base
     self.find_by_sql ["SELECT * FROM medias as md 
     JOIN locations as lc ON lc.id = md.location_id 
     WHERE lc.lat = ? AND lc.lng = ? 
-    AND datetime(date, 'unixepoch', 'localtime') > ? 
-    AND  datetime(date, 'unixepoch', 'localtime') < ? ORDER BY datetime(date, 'unixepoch', 'localtime') DESC LIMIT 1000", lat, lng, from_date, to_date]
+    AND to_timestamp(date)::date > ? 
+    AND  to_timestamp(date)::date < ? ORDER BY to_timestamp(date)::date DESC LIMIT 1000", lat, lng, from_date, to_date]
   end
 end
 

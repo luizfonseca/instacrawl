@@ -21,7 +21,7 @@ class CreateMedias < ActiveRecord::Migration
 		t.string :local_thumb_src, default: '', null: false
 		t.string :local_display_src, default: '', null: false
 
-		t.timestamp :date, default: 0, null: false
+		t.integer :date, default: 0, null: false
 
 
 		t.integer :location_id, null: false
