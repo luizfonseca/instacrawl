@@ -84,7 +84,7 @@ class Media < ActiveRecord::Base
 
 
   def hashtags
-    self.caption.scan(/#\w+/).join ' '
+    self.caption.scan(/#\w+/)
   end
 end
 
