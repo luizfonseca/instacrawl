@@ -6,7 +6,7 @@ class Media < ActiveRecord::Base
 	belongs_to :location
 	validates_presence_of :location
 
-  default_scope { order("to_timestamp(date)") }
+  default_scope { order("to_timestamp(date) DESC") }
 
 	def as_json(options={})
     return {
