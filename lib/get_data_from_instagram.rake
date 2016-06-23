@@ -73,6 +73,8 @@ def get_script_data(page)
   html.css("script").each do |script|
 
     if /window._sharedData/.match(script.content) 
+      puts "#{Time.now} -  Matched script"
+
       open(script_src, 'w') do |file|
         file << script
       end
@@ -100,6 +102,8 @@ def parse_script(script_src)
 
   json = JSON.load(File.read(script_src))
   entry = json['entry_data']
+  #puts entry.inspect
+
 
   scrap_tag_media(entry['TagPage'].first) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['nodes'].size != 0	
   #save_location_media(location, entry['LocationsPage']) if entry['LocationsPage']	
@@ -109,24 +113,24 @@ end
 
 def scrap_tag_media(entry)
   data          = entry['tag']['media']
-  start_cursor  = data['page_info']['start_cursor']
+  start_cursor  = data['page_info']['end_cursor']
 
   query_tag_instagram(start_cursor)
 end
 
 
 def query_tag_instagram(start_cursor)
-
   url = query_hashtag_url(@active_hashtag, start_cursor)
   open(url, 'User-Agent' => USER_AGENT) do |stream|
-    
+
     unless stream.status.first == '200'
       puts "#{Time.now} - Hashtag #{@active_hashtag} request failed with status #{stream.status.first}."
     end
 
     page = JSON.parse(stream.read)
     page_info = page['media']['page_info'] 
-    
+
+
     has_next_page = page_info['has_next_page']
     next_cursor   = page_info['end_cursor']
 
@@ -204,7 +208,7 @@ end
 
 def query_hashtag_url(hashtag, after_cursor)
   hashencode = %Q{
-  ig_hashtag(#{hashtag}) { media.after(#{after_cursor}, 12) {
+  ig_hashtag(#{hashtag}) { media.after(#{after_cursor}, 9) {
   count,
   nodes {
     caption,
@@ -234,6 +238,10 @@ def query_hashtag_url(hashtag, after_cursor)
  }
 
   }
+
+
+
+
 
 
   return "https://www.instagram.com/query/?q=#{URI.encode(hashencode)}"
