@@ -10,6 +10,8 @@ USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit
 # Instagram
 @active_hashtag   = nil
 @active_counter   = 0
+@has_next_page    = true
+
 
 # Ruby wide-available object
 @active_location_obj  = nil
@@ -115,6 +117,10 @@ def scrap_tag_media(entry)
   data          = entry['tag']['media']
   start_cursor  = data['page_info']['end_cursor']
 
+  puts "#{Time.now} - Looping through the page script"
+
+  loop_through(data['nodes']) if data['nodes'].size > 0
+
   query_tag_instagram(start_cursor)
 end
 
@@ -131,27 +137,30 @@ def query_tag_instagram(start_cursor)
     page_info = page['media']['page_info'] 
 
 
-    has_next_page = page_info['has_next_page']
+    @has_next_page = page_info['has_next_page']
     next_cursor   = page_info['end_cursor']
 
 
-    page['media']['nodes'].each do |node|
-      if @active_counter > 50 
-        @active_counter = 0
-        has_next_page = false
-        break
-      end
-      save_media(node)
-    end
+    loop_through(page['media']['nodes']) 
 
 
-    return query_tag_instagram(next_cursor) if has_next_page
+    return query_tag_instagram(next_cursor) if @has_next_page
   end
 
 
 end
 
 
+def loop_through(nodes)
+   nodes.each do |node|
+    if @active_counter > 50 
+      @active_counter = 0
+      @has_next_page = false
+      break
+    end
+    save_media(node)
+  end
+end
 
 def save_media(data)
   media = Media.find_by shortcode: data['code']
