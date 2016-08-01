@@ -64,10 +64,11 @@ end
 # using Nokogiri lib
 def request_from_instagram(url, page_name)
 	return if page_name.to_s.empty?
+
   puts "#{Time.now}  - Fetching [#{url}]"
 
   name = page_name == '' ? 'page' : page_name
-  page = Nokogiri::HTML(open(url))
+	page = Nokogiri::HTML(open(url, 'User-Agent' => USER_AGENT), nil, "UTF-8")
   open("temp/#{name}.html", 'w') do |file|
     file << page 
   end
