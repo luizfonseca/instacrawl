@@ -8,6 +8,7 @@ USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit
 @locations        = Location.all
 
 # Instagram
+@active_location  = nil
 @active_hashtag   = nil
 @active_counter   = 0
 @has_next_page    = true
@@ -16,6 +17,18 @@ USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit
 # Ruby wide-available object
 @active_location_obj  = nil
 
+
+task :get_by_location do
+	@locations.each do |location|
+
+		next if location.instagram_location_id.to_i == 0
+		@active_location = location.instagram_location_id 
+		@active_location_obj  = location
+		
+		find_and_save_media({ location: location.instagram_location_id }) 
+		sleep 2	
+	end
+end
 
 task :get_by_hashtag do
 
@@ -40,7 +53,10 @@ def find_and_save_media(options = {})
   if options[:hashtag]
     hashtag = options[:hashtag].strip
     request_from_instagram(hashtag_url(hashtag), hashtag)
+	elsif options[:location]
+		request_from_instagram(location_url(options[:location]), options[:location])	
   end
+
 end
 
 
@@ -107,14 +123,14 @@ def parse_script(script_src)
   #puts entry.inspect
 
 
-  scrap_tag_media(entry['TagPage'].first) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['nodes'].size != 0	
-  #save_location_media(location, entry['LocationsPage']) if entry['LocationsPage']	
+  scrap_tag_media(entry['TagPage'].first['tag']['media']) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['nodes'].size != 0	
+  scrap_tag_media(entry['LocationsPage'].first['location']['media']) if entry['LocationsPage'] and entry['LocationsPage'].first['location']['media']['nodes'].size != 0	
 end
 
 
 
 def scrap_tag_media(entry)
-  data          = entry['tag']['media']
+  data          = entry 
   start_cursor  = data['page_info']['end_cursor']
 
   puts "#{Time.now} - Looping through the page script"
@@ -125,8 +141,15 @@ def scrap_tag_media(entry)
 end
 
 
+
+
 def query_tag_instagram(start_cursor)
-  url = query_hashtag_url(@active_hashtag, start_cursor)
+	if !@active_location.nil?
+		url = query_location_url(@active_location, start_cursor)
+	else
+		url = query_hashtag_url(@active_hashtag, start_cursor)
+	end
+
   open(url, 'User-Agent' => USER_AGENT) do |stream|
 
     unless stream.status.first == '200'
@@ -190,7 +213,7 @@ def save_media(data)
   m.is_video			      = data['is_video']
   m.location 			      = @active_location_obj
   m.save!
-  puts "Saved media #{m.shortcode}"
+  puts "Saved media #{m.shortcode} - [Hashtag: #{@active_hashtag}] [Location: #{@active_location}]"
 end
 
 
@@ -218,6 +241,50 @@ end
 def query_hashtag_url(hashtag, after_cursor)
   hashencode = %Q{
   ig_hashtag(#{hashtag}) { media.after(#{after_cursor}, 9) {
+  count,
+  nodes {
+    caption,
+    code,
+    comments {
+      count
+    },
+    date,
+    dimensions {
+      height,
+      width
+    },
+    display_src,
+    id,
+    is_video,
+    likes {
+      count
+    },
+    owner {
+      id
+    },
+    thumbnail_src,
+    video_views
+  },
+  page_info
+}
+ }
+
+  }
+
+
+
+
+
+
+  return "https://www.instagram.com/query/?q=#{URI.encode(hashencode)}"
+end
+
+
+
+
+def query_location_url(location, after_cursor)
+  hashencode = %Q{
+  ig_location(#{location}) { media.after(#{after_cursor}, 9) {
   count,
   nodes {
     caption,
