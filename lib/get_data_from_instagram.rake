@@ -4,7 +4,7 @@ require 'uri'
 require 'json'
 
 # OPEN URI configs
-USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"
+USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36"
 @locations        = Location.all
 
 # Instagram
@@ -25,7 +25,7 @@ task :get_by_location do
 		@active_location = location.instagram_location_id 
 		@active_location_obj  = location
 		
-		find_and_save_media({ location: location.instagram_location_id }) 
+		find_and_save_media({ location: @active_location }) 
 		sleep 2	
 	end
 end
@@ -67,7 +67,7 @@ def request_from_instagram(url, page_name)
   puts "#{Time.now}  - Fetching [#{url}]"
 
   name = page_name == '' ? 'page' : page_name
-  page = Nokogiri::HTML(open(url, 'User-Agent' => USER_AGENT), nil, "UTF-8")
+  page = Nokogiri::HTML(open(url))
   open("temp/#{name}.html", 'w') do |file|
     file << page 
   end
@@ -214,6 +214,8 @@ def save_media(data)
   m.location 			      = @active_location_obj
   m.save!
   puts "Saved media #{m.shortcode} - [Hashtag: #{@active_hashtag}] [Location: #{@active_location}]"
+
+	@active_counter += 1
 end
 
 
@@ -228,12 +230,12 @@ end
 
 
 def hashtag_url(hashtag)
-  return "https://www.instagram.com/explore/tags/#{hashtag}"
+  return "https://www.instagram.com/explore/tags/#{hashtag}/"
 end
 
 
 def location_url(location_id)
-  return "https://www.instagram.com/explore/locations/#{location_id}"
+  return "https://www.instagram.com/explore/locations/#{location_id}/"
 end
 
 
