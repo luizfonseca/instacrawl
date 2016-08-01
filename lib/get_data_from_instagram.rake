@@ -231,7 +231,7 @@ end
 
 
 def hashtag_url(hashtag)
-  return "https://www.instagram.com/explore/tags/#{hashtag}/"
+	return "https://www.instagram.com/explore/tags/#{hashtag.force_encoding('utf-8')}/"
 end
 
 
