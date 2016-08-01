@@ -11,33 +11,36 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160614072940) do
+ActiveRecord::Schema.define(version: 20160617160658) do
+
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
 
   create_table "locations", force: :cascade do |t|
-    t.string  "name",         default: "", null: false
-    t.string  "hashtag",      default: "", null: false
-    t.string  "lat",          default: "", null: false
-    t.string  "lng",          default: "", null: false
-    t.string  "address",      default: "", null: false
-    t.integer "instagram_id", default: 0,  null: false
+    t.string  "name",                  default: "", null: false
+    t.string  "hashtag",               default: "", null: false
+    t.string  "lat",                   default: "", null: false
+    t.string  "lng",                   default: "", null: false
+    t.string  "address",               default: "", null: false
+    t.integer "instagram_location_id", default: 0,  null: false
   end
 
   create_table "medias", force: :cascade do |t|
-    t.text     "caption",            default: "",    null: false
-    t.string   "shortcode",          default: "",    null: false
-    t.integer  "dimension_w",        default: 1080,  null: false
-    t.integer  "dimension_h",        default: 1350,  null: false
-    t.integer  "likes_count",        default: 0,     null: false
-    t.integer  "comments_count",     default: 0,     null: false
-    t.string   "owner_id",           default: "0",   null: false
-    t.boolean  "is_video",           default: false, null: false
-    t.string   "instagram_id",       default: "0",   null: false
-    t.string   "remote_thumb_src",   default: "",    null: false
-    t.string   "remote_display_src", default: "",    null: false
-    t.string   "local_thumb_src",    default: "",    null: false
-    t.string   "local_display_src",  default: "",    null: false
-    t.datetime "date",                               null: false
-    t.integer  "location_id",                        null: false
+    t.text    "caption",            default: "",    null: false
+    t.string  "shortcode",          default: "",    null: false
+    t.integer "dimension_w",        default: 1080,  null: false
+    t.integer "dimension_h",        default: 1350,  null: false
+    t.integer "likes_count",        default: 0,     null: false
+    t.integer "comments_count",     default: 0,     null: false
+    t.string  "owner_id",           default: "0",   null: false
+    t.boolean "is_video",           default: false, null: false
+    t.string  "instagram_id",       default: "0",   null: false
+    t.string  "remote_thumb_src",   default: "",    null: false
+    t.string  "remote_display_src", default: "",    null: false
+    t.string  "local_thumb_src",    default: "",    null: false
+    t.string  "local_display_src",  default: "",    null: false
+    t.integer "date",               default: 0,     null: false
+    t.integer "location_id",                        null: false
   end
 
 end

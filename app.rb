@@ -5,7 +5,6 @@ require 'sinatra/activerecord'
 require 'sinatra/json'
 require 'json'
 
-set :database, { adapter: "sqlite3", database: "database.sqlite3" }
 
 Dir.glob('./models/*.rb').each { |r| require r } 
 
@@ -23,13 +22,13 @@ get '/api/locations' do
   content_type :json
   
 	@locations = Location.all
-  JSON.pretty_generate(@locations.as_json)
+  json(@locations.as_json)
 end
 
 get '/api/media' do
   content_type :json
-	@medias = Media.all
-	json @medias
+  @medias = Media.all.limit(200)
+  json(@medias.as_json)
 end
 
 
@@ -38,11 +37,21 @@ get '/api/media/search' do
   @medias = nil
   lat = params[:lat]
   lng = params[:lng]
-  if lat && lng 
+  options = {
+    from: params[:from],
+    to: params[:to],
+    date: params[:date]
+  }
+
+  return unless lat && lng 
+
+  if params[:from] || params[:to] || params[:date]
+    @medias = Media.find_by_coord_and_time(lat, lng, options)
+  else
     @medias = Media.find_by_coord(lat,lng) 
-  	JSON.pretty_generate(@medias.as_json)
   end
 
+  json(@medias.as_json)
 end
 
 

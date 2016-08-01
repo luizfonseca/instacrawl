@@ -24,12 +24,12 @@ end
 
 def save_new_location(row)
 	l = Location.new
-	l.name 			= row['name'].sub(/<br\/?>/, ' ')
+	l.name 			    = row['name'].sub(/<br\/?>/, ' ')
 	l.instagram_id 	= row['google_places_id'] 
-	l.lat 			= row['latitude']
-	l.lng 			= row['longitude']
-	l.address 		= row['desc_endereco']
-	l.hashtag 		= row['hashtags']
+	l.lat 			    = row['latitude']
+	l.lng 			    = row['longitude']
+	l.address 		  = row['desc_endereco']
+	l.hashtag 		  = row['hashtags']
 	l.save!
 	return l
 end
