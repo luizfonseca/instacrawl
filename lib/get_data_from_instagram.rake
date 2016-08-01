@@ -63,7 +63,7 @@ end
 # Simple request page from instagram and save it
 # using Nokogiri lib
 def request_from_instagram(url, page_name)
-
+	return if page_name.to_s.empty?
   puts "#{Time.now}  - Fetching [#{url}]"
 
   name = page_name == '' ? 'page' : page_name
