@@ -40,9 +40,9 @@ get '/api/media/search' do
   lng = params[:lng]
   if lat && lng 
     @medias = Media.find_by_coord(lat,lng) 
+  	JSON.pretty_generate(@medias.as_json)
   end
 
-  JSON.pretty_generate(@medias.as_json)
 end
 
 
