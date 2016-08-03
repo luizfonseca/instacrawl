@@ -24,7 +24,7 @@ task :get_by_location do
 		next if location.instagram_location_id.to_i == 0
 		@active_location = location.instagram_location_id 
 		@active_location_obj  = location
-		
+
 		find_and_save_media({ location: @active_location }) 
 		sleep 2	
 	end
@@ -32,17 +32,17 @@ end
 
 task :get_by_hashtag do
 
-  @locations.each do |location|
-    list = location.hashtag.split(',')
-    list.each do |hashtag|
-      next if ['N/A', ''].include?(hashtag.to_s)
+	@locations.each do |location|
+		list = location.hashtag.split(',')
+		list.each do |hashtag|
+			next if ['N/A', ''].include?(hashtag.to_s)
 
-      @active_hashtag       = hashtag
-      @active_location_obj  = location
-      find_and_save_media({ hashtag: @active_hashtag })
-      sleep 2 # So we dont fetch it every nanosecond
-    end
-  end
+			@active_hashtag       = hashtag
+			@active_location_obj  = location
+			find_and_save_media({ hashtag: @active_hashtag })
+			sleep 2 # So we dont fetch it every nanosecond
+		end
+	end
 
 end
 
@@ -50,12 +50,12 @@ end
 
 # Just decoupling
 def find_and_save_media(options = {})
-  if options[:hashtag]
-    hashtag = options[:hashtag].strip
-    request_from_instagram(hashtag_url(hashtag), hashtag)
+	if options[:hashtag]
+		hashtag = options[:hashtag].strip
+		request_from_instagram(hashtag_url(hashtag), hashtag)
 	elsif options[:location]
 		request_from_instagram(location_url(options[:location]), options[:location])	
-  end
+	end
 
 end
 
@@ -65,16 +65,31 @@ end
 def request_from_instagram(url, page_name)
 	return if page_name.to_s.empty?
 
-  puts "#{Time.now}  - Fetching [#{url}]"
+	puts "#{Time.now}  - Fetching [#{url}]"
 
-  name = page_name == '' ? 'page' : page_name
-	page = Nokogiri::HTML(open(url, 'User-Agent' => USER_AGENT), nil, "UTF-8")
-  open("temp/#{name}.html", 'w') do |file|
-    file << page 
-  end
-  puts "#{Time.now}  - Page temp/#{name}.html saved... [#{url}]"
+	name = page_name == '' ? 'page' : page_name
 
-  get_script_data(page_name)
+	begin
+		page = Nokogiri::HTML(open(url, 'User-Agent' => USER_AGENT), nil, "UTF-8")
+		# handle doc
+		open("temp/#{name}.html", 'w') do |file|
+			file << page 
+		end
+		puts "#{Time.now}  - Page temp/#{name}.html saved... [#{url}]"
+
+		get_script_data(page_name)
+
+	rescue OpenURI::HTTPError => e
+		if e.message == '404 Not Found'
+			puts "Instagram page #{name} not found "
+			# handle 404 error
+			return 
+		else
+			raise e
+		end
+	end
+
+
 end
 
 
@@ -82,25 +97,25 @@ end
 # We fetch the HTML for the <script> tag
 # containing the shared data object
 def get_script_data(page) 
-  puts "#{Time.now}  - Page #{page} getting scrapped... "
+	puts "#{Time.now}  - Page #{page} getting scrapped... "
 
-  # Begin crawling	
-  page_src 	= "./temp/#{page}.html"
-  script_src 	= "temp/script-#{page}.txt"
+	# Begin crawling	
+	page_src 	= "./temp/#{page}.html"
+	script_src 	= "temp/script-#{page}.txt"
 
-  html = Nokogiri::HTML(open(page_src))
-  html.css("script").each do |script|
+	html = Nokogiri::HTML(open(page_src))
+	html.css("script").each do |script|
 
-    if /window._sharedData/.match(script.content) 
-      puts "#{Time.now} -  Matched script"
+		if /window._sharedData/.match(script.content) 
+			puts "#{Time.now} -  Matched script"
 
-      open(script_src, 'w') do |file|
-        file << script
-      end
-    end
-  end
-  puts "#{Time.now} - Page #{page_src} > script saved."
-  parse_script(script_src)
+			open(script_src, 'w') do |file|
+				file << script
+			end
+		end
+	end
+	puts "#{Time.now} - Page #{page_src} > script saved."
+	parse_script(script_src)
 end
 
 
@@ -110,35 +125,35 @@ end
 # as JSON
 def parse_script(script_src)
 
-  file = File.read(script_src)
+	file = File.read(script_src)
 
-  file = file.sub(/<script type="text\/javascript">window\._sharedData =/, '')
-  file = file.sub(/;<\/script>/, '')
+	file = file.sub(/<script type="text\/javascript">window\._sharedData =/, '')
+	file = file.sub(/;<\/script>/, '')
 
-  open(script_src, 'w') do |f|
-    f << file
-  end
+	open(script_src, 'w') do |f|
+		f << file
+	end
 
-  json = JSON.load(File.read(script_src))
-  entry = json['entry_data']
-  #puts entry.inspect
+	json = JSON.load(File.read(script_src))
+	entry = json['entry_data']
+	#puts entry.inspect
 
 
-  scrap_tag_media(entry['TagPage'].first['tag']['media']) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['nodes'].size != 0	
-  scrap_tag_media(entry['LocationsPage'].first['location']['media']) if entry['LocationsPage'] and entry['LocationsPage'].first['location']['media']['nodes'].size != 0	
+	scrap_tag_media(entry['TagPage'].first['tag']['media']) if entry['TagPage'] and entry['TagPage'].first['tag']['media']['nodes'].size != 0	
+	scrap_tag_media(entry['LocationsPage'].first['location']['media']) if entry['LocationsPage'] and entry['LocationsPage'].first['location']['media']['nodes'].size != 0	
 end
 
 
 
 def scrap_tag_media(entry)
-  data          = entry 
-  start_cursor  = data['page_info']['end_cursor']
+	data          = entry 
+	start_cursor  = data['page_info']['end_cursor']
 
-  puts "#{Time.now} - Looping through the page script"
+	puts "#{Time.now} - Looping through the page script"
 
-  loop_through(data['nodes']) if data['nodes'].size > 0
+	loop_through(data['nodes']) if data['nodes'].size > 0
 
-  query_tag_instagram(start_cursor)
+	query_tag_instagram(start_cursor)
 end
 
 
@@ -151,82 +166,82 @@ def query_tag_instagram(start_cursor)
 		url = query_hashtag_url(@active_hashtag, start_cursor)
 	end
 
-  open(url, 'User-Agent' => USER_AGENT) do |stream|
+	open(url, 'User-Agent' => USER_AGENT) do |stream|
 
-    unless stream.status.first == '200'
-      puts "#{Time.now} - Hashtag #{@active_hashtag} request failed with status #{stream.status.first}."
-    end
+		unless stream.status.first == '200'
+			puts "#{Time.now} - Hashtag #{@active_hashtag} request failed with status #{stream.status.first}."
+		end
 
-    page = JSON.parse(stream.read)
-    page_info = page['media']['page_info'] 
-
-
-    @has_next_page = page_info['has_next_page']
-    next_cursor   = page_info['end_cursor']
+		page = JSON.parse(stream.read)
+		page_info = page['media']['page_info'] 
 
 
-    loop_through(page['media']['nodes']) 
+		@has_next_page = page_info['has_next_page']
+		next_cursor   = page_info['end_cursor']
 
 
-    return query_tag_instagram(next_cursor) if @has_next_page
-  end
+		loop_through(page['media']['nodes']) 
+
+
+		return query_tag_instagram(next_cursor) if @has_next_page
+	end
 
 
 end
 
 
 def loop_through(nodes)
-   nodes.each do |node|
-    if @active_counter > 50 
-      @active_counter = 0
-      @has_next_page = false
-      break
-    end
-    save_media(node)
-  end
+	nodes.each do |node|
+		if @active_counter > 50 
+			@active_counter = 0
+			@has_next_page = false
+			break
+		end
+		save_media(node)
+	end
 end
 
 def save_media(data)
-  media = Media.find_by shortcode: data['code']
+	media = Media.find_by shortcode: data['code']
 
-  unless media.nil?
-    puts "#{data['code']} -  Media already saved"
-    @active_counter += 1
-    return
-  end
+	unless media.nil?
+		puts "#{data['code']} -  Media already saved"
+		@active_counter += 1
+		return
+	end
 
-  m = Media.new
-  m.caption       = data['caption'].to_s
-  m.shortcode			= data['code'].to_s
-  m.date          = data['date']
-  m.dimension_w 		= data['dimensions']['width'].to_i
-  m.dimension_h 		= data['dimensions']['height'].to_i
-  m.comments_count 	= data['comments']['count'].to_i
-  m.likes_count		  = data['likes']['count'].to_i
-  m.owner_id 			  = data['owner']['id'].to_s
-  m.remote_thumb_src	  = data['thumbnail_src'].to_s
-  m.remote_display_src  = data['display_src'].to_s
+	m = Media.new
+	m.caption       = data['caption'].to_s
+	m.shortcode			= data['code'].to_s
+	m.date          = data['date']
+	m.dimension_w 		= data['dimensions']['width'].to_i
+	m.dimension_h 		= data['dimensions']['height'].to_i
+	m.comments_count 	= data['comments']['count'].to_i
+	m.likes_count		  = data['likes']['count'].to_i
+	m.owner_id 			  = data['owner']['id'].to_s
+	m.remote_thumb_src	  = data['thumbnail_src'].to_s
+	m.remote_display_src  = data['display_src'].to_s
 
-  m.local_thumb_src	    = get_image("thumb_#{data['code'].to_s}", data['thumbnail_src'].to_s)
-  m.local_display_src   = get_image("display_#{data['code'].to_s}", data['display_src'].to_s)
-  
-  m.instagram_id		    = data['id'].to_s
-  m.is_video			      = data['is_video']
-  m.location 			      = @active_location_obj
-  m.save!
-  puts "Saved media #{m.shortcode} - [Hashtag: #{@active_hashtag}] [Location: #{@active_location}]"
+	m.local_thumb_src	    = get_image("thumb_#{data['code'].to_s}", data['thumbnail_src'].to_s)
+	m.local_display_src   = get_image("display_#{data['code'].to_s}", data['display_src'].to_s)
+
+	m.instagram_id		    = data['id'].to_s
+	m.is_video			      = data['is_video']
+	m.location 			      = @active_location_obj
+	m.save!
+	puts "Saved media #{m.shortcode} - [Hashtag: #{@active_hashtag}] [Location: #{@active_location}]"
 
 	@active_counter += 1
 end
 
 
 def get_image(name, image_url)
-  src = "public/media/#{name}.jpg"
-  open(src, 'wb') do |file|
-    file << open(image_url).read
-  end
+	src = "public/media/#{name}.jpg"
+	open(src, 'wb') do |file|
+		file << open(image_url).read
+	end
 
-  return "media/#{name}.jpg"
+	return "media/#{name}.jpg"
 end
 
 
@@ -236,93 +251,93 @@ end
 
 
 def location_url(location_id)
-  return "https://www.instagram.com/explore/locations/#{location_id}/"
+	return "https://www.instagram.com/explore/locations/#{location_id}/"
 end
 
 
 
 def query_hashtag_url(hashtag, after_cursor)
-  hashencode = %Q{
-  ig_hashtag(#{hashtag}) { media.after(#{after_cursor}, 9) {
-  count,
-  nodes {
-    caption,
-    code,
-    comments {
-      count
-    },
-    date,
-    dimensions {
-      height,
-      width
-    },
-    display_src,
-    id,
-    is_video,
-    likes {
-      count
-    },
-    owner {
-      id
-    },
-    thumbnail_src,
-    video_views
-  },
-  page_info
+	hashencode = %Q{
+	ig_hashtag(#{hashtag}) { media.after(#{after_cursor}, 9) {
+	count,
+	nodes {
+		caption,
+		code,
+		comments {
+			count
+		},
+		date,
+		dimensions {
+			height,
+			width
+		},
+		display_src,
+		id,
+		is_video,
+		likes {
+			count
+		},
+			owner {
+			id
+		},
+		thumbnail_src,
+		video_views
+	},
+	page_info
 }
  }
 
-  }
+	}
 
 
 
 
 
 
-  return "https://www.instagram.com/query/?q=#{URI.encode(hashencode)}"
+	return "https://www.instagram.com/query/?q=#{URI.encode(hashencode)}"
 end
 
 
 
 
 def query_location_url(location, after_cursor)
-  hashencode = %Q{
-  ig_location(#{location}) { media.after(#{after_cursor}, 9) {
-  count,
-  nodes {
-    caption,
-    code,
-    comments {
-      count
-    },
-    date,
-    dimensions {
-      height,
-      width
-    },
-    display_src,
-    id,
-    is_video,
-    likes {
-      count
-    },
-    owner {
-      id
-    },
-    thumbnail_src,
-    video_views
-  },
-  page_info
+	hashencode = %Q{
+	ig_location(#{location}) { media.after(#{after_cursor}, 9) {
+	count,
+	nodes {
+		caption,
+		code,
+		comments {
+			count
+		},
+		date,
+		dimensions {
+			height,
+			width
+		},
+		display_src,
+		id,
+		is_video,
+		likes {
+			count
+		},
+			owner {
+			id
+		},
+		thumbnail_src,
+		video_views
+	},
+	page_info
 }
  }
 
-  }
+	}
 
 
 
 
 
 
-  return "https://www.instagram.com/query/?q=#{URI.encode(hashencode)}"
+	return "https://www.instagram.com/query/?q=#{URI.encode(hashencode)}"
 end
 
