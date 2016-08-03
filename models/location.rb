@@ -3,6 +3,7 @@ class Location < ActiveRecord::Base
 
 	def as_json(options={})
 		return {
+			id: self.id,
 			name: self.name,
 			hashtag: self.hashtag,
 			latitude: self.lat,
